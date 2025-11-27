@@ -43,3 +43,29 @@ jobs:
 
       - name: Run tests + code coverage
         run: php artisan test
+
+      - env:
+          XDEBUG_MODE: coverage
+        run: vendor/bin/phpunit --coverage-html coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
+
+      - name: Prepare zip file for EB deploy
+        if: success() && github.ref == 'refs/heads/main'
+        run: zip -r app.zip . -x "*.git*" "*.github/*" "*.env" "coverage/*" ".phpunit.result.cache" "vendor/*" "tests/*"
+
+      - name: Deploy to AWS Elastic Beanstalk
+        if: success() && github.ref == 'refs/heads/main'
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ secrets.EB_APP_NAME }}
+          environment_name: ${{ secrets.EB_ENV_NAME }}
+          region: ${{ secrets.AWS_REGION }}
+          version_label: ${{ github.sha }}
+          deployment_package: app.zip
