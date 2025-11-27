@@ -226,3 +226,14 @@
 **API Rate Limiting**
 
 In this scenario, API requests are restricted to 60 per minute to prevent a high volume of calls.
+
+```json
+    {
+    	"success": false,
+    	"error": {
+    		"code": "TOO_MANY_REQUESTS",
+    		"message": "You are making requests too quickly. Please try again later.",
+    		"retry_after_seconds": 46
+    	}
+    }
+```
