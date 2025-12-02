@@ -5,6 +5,7 @@ use App\Exceptions\API\NotFoundException;
 use App\Exceptions\API\ServerException;
 use App\Models\KeyValue;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -28,9 +29,17 @@ class KeyValueService
 
     public function store(array $validated)
     {
+        DB::beginTransaction();
+
         try {
-            return KeyValue::create($validated);
+            $record = KeyValue::create($validated);
+
+            DB::commit();
+
+            return $record;
         } catch (Throwable $exception) {
+            DB::rollBack();
+
             $traceId = Str::uuid();
 
             throw new ServerException("Failed to store the key-value pair", [
